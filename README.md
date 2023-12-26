@@ -67,28 +67,25 @@ pip install -v -e .
 ## Get Started
 
 Please see [get_started.md](docs/en/get_started.md) for the basic usage of MMRotate.
-We provide [colab tutorial](demo/MMRotate_Tutorial.ipynb), and other tutorials for:
+We also provide some tutorials for:
 
 - [learn the basics](docs/en/intro.md)
 - [learn the config](docs/en/tutorials/customize_config.md)
 - [customize dataset](docs/en/tutorials/customize_dataset.md)
 - [customize model](docs/en/tutorials/customize_models.md)
+- [dynamic perception](docs/en/tutorials/dynamic_perception.md)
+- [useful tools](docs/en/tutorials/useful_tools.md)
 
 ## Acknowledgments
 
 The code is developed based on the following repositories. We appreciate their nice implementations.
 
-|              Method              |                      Repository                       |
-| :------------------------------: | :---------------------------------------------------: |
-|               ViT                | https://github.com/google-research/vision_transformer |
-|              ResNet              |          https://github.com/pytorch/pytorch           |
-|               CLIP               |            https://github.com/openai/CLIP             |
-|             MoCo_v2              |       https://github.com/facebookresearch/moco        |
-|            SimCLR_v2             |       https://github.com/google-research/simclr       |
-|            SimCLR_v2             |     https://github.com/Separius/SimCLRv2-Pytorch      |
-|               MAE                |        https://github.com/facebookresearch/mae        |
-|              SimMIM              |          https://github.com/microsoft/SimMIM          |
-| logistic regression, naive Bayes |     https://github.com/scikit-learn/scikit-learn      |
+|  Method  |                Repository                 |
+| :------: | :---------------------------------------: |
+|  RTMDet  | https://github.com/open-mmlab/mmdetection |
+| RTMDet-R |  https://github.com/open-mmlab/mmrotate   |
+|  ECANet  |    https://github.com/BangguWu/ECANet     |
+|  QFocal  |     https://github.com/implus/GFocal      |
 
 ## Cite this repository
 
