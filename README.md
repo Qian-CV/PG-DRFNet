@@ -1,14 +1,16 @@
 # PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images
 
-This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at: [Here]()
+This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at: [here]()
 
 ## Introduction
 
-This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at: [Here]()
+This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at [here]()
 
 The master branch is built on MMRotate which works with **PyTorch 1.8+**.
 
 PG-DRFNet's train/test configure files are placed under configs/PG-DRFNet/
+
+How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](docs/en/tutorials/dynamic_perception.md).
 
 ## Deep Learning Experiments
 
