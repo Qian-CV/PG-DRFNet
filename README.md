@@ -48,7 +48,7 @@ Detailed hyperparameters config can be found in configs/base/
 
 ## Installation
 
-MMRotate depends on [PyTorch](https://pytorch.org/), [MMCV](https://github.com/open-mmlab/mmcv) and [MMDetection](https://github.com/open-mmlab/mmdetection).
+[MMRotate](https://github.com/open-mmlab/mmrotate/tree/1.x) depends on [PyTorch](https://pytorch.org/), [MMCV](https://github.com/open-mmlab/mmcv) and [MMDetection](https://github.com/open-mmlab/mmdetection).
 Below are quick steps for installation.
 Please refer to [Install Guide](https://mmrotate.readthedocs.io/en/latest/install.html) for more detailed instruction.
 
@@ -59,8 +59,8 @@ conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch
 pip install -U openmim
 mim install mmcv-full
 mim install mmdet
-git clone https://github.com/zcablii/Large-Selective-Kernel-Network.git
-cd Large-Selective-Kernel-Network
+git clone https://github.com/Qian-CV/PG-DRFNet.git
+cd PG-DRFNet
 pip install -v -e .
 ```
 
