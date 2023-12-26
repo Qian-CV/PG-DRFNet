@@ -22,7 +22,7 @@ PG-DRFNet's train/test configure files are placed under configs/PG-DRFNet/
 |                    Model                     | Datasets |  mAP  | Angle | lr schd | Batch Size |                           Configs                            |                           Download                           |
 | :------------------------------------------: | -------- | :---: | :---: | :-----: | :--------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | [RTMDet-M](https://arxiv.org/abs/2212.07784) | DOTA2.0  | 57.71 | le90  |   6x    |     8      |                              -                               |                              -                               |
-|                  PG-DRFNet                   | DOTA2.0  | 59.01 | le90  |   6x    |     8      | [pg_drfnet-6x-dota2](./configs/PG-DRFNet/DOTA2_0/pg_drfnet-6x-dota2.py) | [model](链接：https://pan.baidu.com/s/1r4XwtQtBs8DVgS3di8QSvA?pwd=yj0f <br/>提取码：yj0f) \| [log](./tools/work_dirs/PG-DRFNet/20231017_003441.log) |
+|                  PG-DRFNet                   | DOTA2.0  | 59.01 | le90  |   6x    |     8      | [pg_drfnet-6x-dota2](./configs/PG-DRFNet/DOTA2_0/pg_drfnet-6x-dota2.py) | [model](https://drive.google.com/file/d/17ARF2Dv__Fl94EOWFnH4w9ZeBtJ_dJkY/view?usp=drive_link) \| [log](./tools/work_dirs/PG-DRFNet/20231017_003441.log) |
 
 For example, when dataset is DOTA2.0 and method is PG-DRFNet, you can train by running the following
 
