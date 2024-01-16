@@ -68,7 +68,7 @@ pip install -v -e .
 
 ## Get Started
 
-Please see [get_started.md](docs/en/get_started.md) for the basic usage of MMRotate.
+Please see [get_started](docs/en/get_started.md) for the basic usage of MMRotate.
 We also provide some tutorials for:
 
 - [learn the basics](docs/en/intro.md)
