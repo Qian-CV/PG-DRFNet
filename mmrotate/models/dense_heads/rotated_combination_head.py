@@ -22,13 +22,13 @@ from mmrotate.registry import MODELS, TASK_UTILS
 from mmrotate.structures import RotatedBoxes, distance2obb
 from mmrotate.models.dense_heads import RotatedRTMDetHead
 
-from utils import utils, qinfer_v3, qinfer_v1, qinfer_v2, qinfer_v1_1
+from utils import utils, qinfer_v2, qinfer_v1
 from utils.utils import get_box_scales, get_anchor_center_min_dis, permute_to_N_HWA_K
 from utils.fvcore.nn.focal_loss import sigmoid_focal_loss
 
 
 @MODELS.register_module()
-class RotatedRTMDetGuidanceHead(RotatedRTMDetHead):
+class CombinationHead(RotatedRTMDetHead):
     """Detection Head of Rotated RTMDet.
 
     Args:
@@ -556,7 +556,7 @@ class RotatedRTMDetGuidanceHead(RotatedRTMDetHead):
 
 
 @MODELS.register_module()
-class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
+class CombinationSepBNHead(CombinationHead):
     """Rotated RTMDetHead with separated BN layers and shared conv layers.
 
     Args:
@@ -579,22 +579,22 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
     def __init__(self,
                  num_classes: int,
                  in_channels: int,
-                 query_head_size: list,
-                 query_layer_train,
-                 small_object_scale,
-                 small_center_dis_coeff,
-                 query_loss_gammas,
-                 query_loss_weights,
+                 guidance_head_size: list,
+                 guidance_layer_train,
+                 fp_object_scale,
+                 fp_center_dis_coeff,
+                 guidance_loss_gammas,
+                 guidance_loss_weights,
                  cls_layer_weight,
                  reg_layer_weight,
-                 query_infer: str,
-                 infer_version: str,
-                 layers_whole_test: list,
+                 dynamic_perception_infer: str,
+                 dp_version: str,
+                 layers_no_dp: list,
                  layers_key_test: list,
                  layers_value_test: list,
-                 query_threshold: float,
+                 dp_threshold: float,
                  context: float,
-                 loss_query_weight: float,
+                 loss_guidance_weight: float,
 
                  share_conv: bool = True,
                  scale_angle: bool = False,
@@ -619,32 +619,28 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
             **kwargs)
 
         # 新加入的初始化
-        self.query_layer_train = query_layer_train
-        self.query_featmap_sizes = None
-        self.query_anchor_generator = utils.QueryAnchorGenerator([4, 8, 16, 32], [0.5, 1.0, 2.0], scales=[8])
-        self.small_obj_scale = small_object_scale
-        self.small_center_dis_coeff = small_center_dis_coeff
-        self.query_loss_gammas = query_loss_gammas
-        self.query_loss_weights = query_loss_weights
+        self.guidance_layer_train = guidance_layer_train
+        self.guidance_featmap_sizes = None
+        self.guidance_anchor_generator = utils.QueryAnchorGenerator([4, 8, 16, 32], [0.5, 1.0, 2.0], scales=[8])
+        self.fp_obj_scale = fp_object_scale
+        self.fp_center_dis_coeff = fp_center_dis_coeff
+        self.guidance_loss_gammas = guidance_loss_gammas
+        self.guidance_loss_weights = guidance_loss_weights
         self.cls_layer_weight = cls_layer_weight
         self.reg_layer_weight = reg_layer_weight
-        self.query_infer = query_infer
-        self.layers_whole_test = layers_whole_test
+        self.dynamic_perception_infer = dynamic_perception_infer
+        self.layers_no_dp = layers_no_dp
         self.layers_key_test = layers_key_test
         self.layers_value_test = layers_value_test
-        self.infer_version = infer_version
+        self.dp_version = dp_version
         self.context = context
-        self.loss_query_weight = loss_query_weight
+        self.loss_guidance_weight = loss_guidance_weight
 
-        self.query_head = Head_3x3(query_head_size[0], query_head_size[1], query_head_size[2], query_head_size[3])
-        if infer_version == 'v1':
-            self.qInfer = qinfer_v1.QueryInfer(1, num_classes, query_threshold, context=context)
-        elif infer_version == 'v1.1':
-            self.qInfer = qinfer_v1_1.QueryInfer(1, num_classes, query_threshold, context=context)
-        elif infer_version == 'v2':
-            self.qInfer = qinfer_v2.QueryInfer(1, num_classes, query_threshold, context=context)
-        elif infer_version == 'v3':
-            self.qInfer = qinfer_v3.QueryInfer(1, num_classes, query_threshold, context=context)
+        self.guidance_head = PGHead(guidance_head_size[0], guidance_head_size[1], guidance_head_size[2], guidance_head_size[3])
+        if dp_version == 'v1':
+            self.qInfer = qinfer_v1.QueryInfer(1, num_classes, dp_threshold, context=context)
+        elif dp_version == 'v2':
+            self.qInfer = qinfer_v2.QueryInfer(1, num_classes, dp_threshold, context=context)
 
     def _init_layers(self) -> None:
         """Initialize layers of the head."""
@@ -734,15 +730,15 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                 normal_init(rtm_obj, std=0.01, bias=bias_cls)
 
     @torch.no_grad()
-    def get_query_gt(self, small_anchor_centers, targets):
+    def get_guidance_gt(self, small_anchor_centers, targets):
         small_gt_cls = []
         for lind, anchor_center in enumerate(small_anchor_centers):
             per_layer_small_gt = []
             for target_per_image in targets:
                 target_box_scales = get_box_scales(
                     target_per_image.bboxes)  # fixme: 这里需要对加入旋转角的框计算面积，括号里面写instance的bbox tensor,新框架更新了面积方法
-                small_inds = (target_box_scales < self.small_obj_scale[lind][1]) & (
-                        target_box_scales >= self.small_obj_scale[lind][0])
+                small_inds = (target_box_scales < self.fp_obj_scale[lind][1]) & (
+                        target_box_scales >= self.fp_obj_scale[lind][0])
                 small_boxes = target_per_image.bboxes[small_inds]
                 small_boxes_centers = small_boxes.centers
                 center_dis, minarg = get_anchor_center_min_dis(small_boxes_centers, anchor_center)
@@ -750,18 +746,18 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
 
                 if len(small_boxes) != 0:
                     min_small_target_scale = (target_box_scales[small_inds])[minarg]
-                    small_obj_target[center_dis < min_small_target_scale * self.small_center_dis_coeff[lind]] = 1
+                    small_obj_target[center_dis < min_small_target_scale * self.fp_center_dis_coeff[lind]] = 1
 
                 per_layer_small_gt.append(small_obj_target)
             small_gt_cls.append(torch.stack(per_layer_small_gt))
 
         return small_gt_cls
 
-    def query_loss(self, gt_small_obj, pred_small_obj, gammas, weights):
+    def guidance_loss(self, gt_small_obj, pred_small_obj, gammas, weights):
         pred_logits = [permute_to_N_HWA_K(x, 1).flatten() for x in pred_small_obj]
         gts = [x.flatten() for x in gt_small_obj]
         sigmoid_focal_loss_jit: "torch.jit.ScriptModule" = torch.jit.script(sigmoid_focal_loss)
-        loss = self.loss_query_weight * sum(
+        loss = self.loss_guidance_weight * sum(
             [sigmoid_focal_loss_jit(x, y, alpha=0.25, gamma=g, reduction="mean") * w for (x, y, g, w) in
              zip(pred_logits, gts, gammas, weights)])
         return loss
@@ -785,7 +781,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
               levels, each is a 4D-tensor, the channels number is
               num_base_priors * angle_dim.
         """
-        if self.training or (not self.training and not self.query_infer):
+        if self.training or (not self.training and not self.dynamic_perception_infer):
             cls_scores = []
             bbox_preds = []
             angle_preds = []
@@ -816,10 +812,10 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                 bbox_preds.append(reg_dist)
                 angle_preds.append(angle_pred)
             with torch.no_grad():  # fixme: 增加了防止爆显存
-                query_feature = [feats[x] for x in self.query_layer_train]
-                self.query_featmap_sizes = [featmap.size()[-2:] for featmap in query_feature]
-            query_logits = self.query_head(query_feature)
-            return tuple(cls_scores), tuple(bbox_preds), tuple(angle_preds), tuple(query_logits)
+                guidance_feature = [feats[x] for x in self.guidance_layer_train]
+                self.guidance_featmap_sizes = [featmap.size()[-2:] for featmap in guidance_feature]
+            guidance_logits = self.guidance_head(guidance_feature)
+            return tuple(cls_scores), tuple(bbox_preds), tuple(angle_preds), tuple(guidance_logits)
         else:
             return self.forward_infer(feats)
 
@@ -827,14 +823,14 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
         cls_scores = []
         bbox_preds = []
         angle_preds = []
-        # 搭建whole,query's feature and strides
-        features_whole = [feats[x] for x in self.layers_whole_test]
+        # 搭建whole,guidance's feature and strides
+        features_whole = [feats[x] for x in self.layers_no_dp]
         features_key = [feats[x] for x in self.layers_key_test]
-        features_query = [feats[x] for x in self.layers_value_test]
-        strides_whole = [self.prior_generator.strides[x] for x in self.layers_whole_test]
-        strides_query = [self.prior_generator.strides[x] for x in self.layers_value_test]
+        features_guidance = [feats[x] for x in self.layers_value_test]
+        strides_whole = [self.prior_generator.strides[x] for x in self.layers_no_dp]
+        strides_guidance = [self.prior_generator.strides[x] for x in self.layers_value_test]
         # 下面循环中用到的卷积参数对应层编号
-        layer_num = len(feats) - len(self.layers_whole_test)
+        layer_num = len(feats) - len(self.layers_no_dp)
 
         for idx, (x, stride) in enumerate(
                 zip(features_whole, strides_whole)):
@@ -863,10 +859,10 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
             bbox_preds.append(reg_dist)
             angle_preds.append(angle_pred)
 
-        # 开始计算query层的回归和分类
-        query_logits = self.query_head(features_key)
+        # 开始计算guidance层的回归和分类
+        guidance_logits = self.guidance_head(features_key)
         # 获得特征分块结果
-        block_feature_list, anchor_inds = self.qInfer.run_qinfer(features_query, query_logits)
+        block_feature_list, anchor_inds = self.qInfer.run_qinfer(features_guidance, guidance_logits)
         self.anchor_inds = anchor_inds
         # 获得feature_mapsize
         num_levels = len(feats)
@@ -891,9 +887,9 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                     cls_score = inverse_sigmoid(
                         sigmoid_geometric_mean(cls_score, objectness))
                 if self.exp_on_reg:
-                    reg_dist = self.rtm_reg[1](reg_feat).exp() * strides_query[0][0]
+                    reg_dist = self.rtm_reg[1](reg_feat).exp() * strides_guidance[0][0]
                 else:
-                    reg_dist = self.rtm_reg[1](reg_feat) * strides_query[0][0]
+                    reg_dist = self.rtm_reg[1](reg_feat) * strides_guidance[0][0]
 
                 angle_pred = self.rtm_ang[1](reg_feat)
 
@@ -902,7 +898,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                 det_result_list.append(reg_dist)
                 angle_result_list.append(angle_pred)
 
-            if self.infer_version == 'v2':
+            if self.dp_version == 'v2':
                 cls_result_all = cls_result_list
                 bbox_result_all = det_result_list
                 angle_result_all = angle_result_list
@@ -910,8 +906,8 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                 cls_result_all = torch.cat(cls_result_list, 0)
                 bbox_result_all = torch.cat(det_result_list, 0)
                 angle_result_all = torch.cat(angle_result_list, 0)
-                # 不同的infer_version有着不同的处理方式
-                if self.infer_version == 'v1' or self.infer_version == 'v1.1':
+                # 不同的dp_version有着不同的处理方式
+                if self.dp_version == 'v1' or self.dp_version == 'v1.1':
                     cls_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
                     bbox_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
                     angle_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
@@ -926,7 +922,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                      cls_scores: List[Tensor],
                      bbox_preds: List[Tensor],
                      angle_preds: List[Tensor],
-                     query_logits: List[Tensor],
+                     guidance_logits: List[Tensor],
                      batch_gt_instances: InstanceList,
                      batch_img_metas: List[dict],
                      batch_gt_instances_ignore: OptInstanceList = None,
@@ -956,13 +952,13 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
         """
         loss_dict = super().loss_by_feat(cls_scores, bbox_preds, angle_preds,
                                          batch_gt_instances, batch_img_metas, batch_gt_instances_ignore)
-        # 开始计算query损失
+        # 开始计算guidance损失
         with torch.no_grad():
-            query_centers = self.query_anchor_generator.get_center_and_anchor(
-                self.query_featmap_sizes)  # fixme:是否使用旋转的fake anchor
-            gt_query = self.get_query_gt(query_centers, batch_gt_instances)
-        _query_loss = self.query_loss(gt_query, query_logits, self.query_loss_gammas, self.query_loss_weights)
-        loss_dict['loss_guidance'] = _query_loss
+            guidance_centers = self.guidance_anchor_generator.get_center_and_anchor(
+                self.guidance_featmap_sizes)  # fixme:是否使用旋转的fake anchor
+            gt_guidance = self.get_guidance_gt(guidance_centers, batch_gt_instances)
+        _guidance_loss = self.guidance_loss(gt_guidance, guidance_logits, self.guidance_loss_gammas, self.guidance_loss_weights)
+        loss_dict['loss_guidance'] = _guidance_loss
         # 动态感受野，平衡不同层的权重
         if type(self.cls_layer_weight) and type(self.reg_layer_weight) is list:
             loss_dict['loss_cls'] = [x * y for x, y in zip(loss_dict['loss_cls'], self.cls_layer_weight)]
@@ -979,7 +975,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                         cls_scores: List[Tensor],
                         bbox_preds: List[Tensor],
                         angle_preds: List[Tensor],
-                        query_logits: List[Tensor],
+                        guidance_logits: List[Tensor],
                         score_factors: Optional[List[Tensor]] = None,
                         batch_img_metas: Optional[List[dict]] = None,
                         cfg: Optional[ConfigDict] = None,
@@ -1021,7 +1017,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                 - bboxes (Tensor): Has a shape (num_instances, 5),
                   the last dimension 5 arrange as (x, y, w, h, t).
         """
-        if not self.query_infer:
+        if not self.dynamic_perception_infer:
             return super().predict_by_feat(cls_scores, bbox_preds, angle_preds,
                                            score_factors, batch_img_metas, cfg, rescale, with_nms)
         else:
@@ -1058,7 +1054,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                     score_factor_list = [None for _ in range(num_levels - 1)]
 
                 # 构建whole和value的预选框
-                anchors_whole = [mlvl_priors[x] for x in self.layers_whole_test]
+                anchors_whole = [mlvl_priors[x] for x in self.layers_no_dp]
                 anchors_value = [mlvl_priors[x] for x in self.layers_value_test]
                 anchors_all = mlvl_priors[1:]
 
@@ -1066,7 +1062,7 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
                     select_anchors_value = anchors_value[0][self.anchor_inds.flatten(0)].view(-1, 2)
                     anchors_all[0] = select_anchors_value
                 mlvl_priors_choose = anchors_whole if len(cls_score_list) == len(
-                    self.layers_whole_test) else anchors_all
+                    self.layers_no_dp) else anchors_all
 
                 results = self._predict_by_feat_single(
                     cls_score_list=cls_score_list,
@@ -1102,9 +1098,9 @@ class RotatedRTMDetGuidanceSepBNHead(RotatedRTMDetGuidanceHead):
     #     return receptive_field_weight
 
 
-class Head_3x3(nn.Module):
+class PGHead(nn.Module):
     def __init__(self, in_channels, conv_channels, num_convs, pred_channels, pred_prior=None):
-        super(Head_3x3, self).__init__()
+        super(PGHead, self).__init__()
         self.num_convs = num_convs
 
         self.subnet = []

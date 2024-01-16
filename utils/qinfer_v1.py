@@ -1,4 +1,3 @@
-# todo:对关键位置索引直接构建上下文正方形兴趣块，并平移超出特征范围的兴趣块
 from typing import List
 import torch
 import torch.nn.functional as F
@@ -56,32 +55,12 @@ class QueryInfer(object):
         good_idx = (ys >= 0) & (ys < fh) & (xs >= 0) & (xs < fw)
         if ys[good_idx].shape[0] != block_num * block_pixes_num:
             bad_indexes = torch.where(good_idx == 0)[0]  # 返回一个元组，第一位是横坐标代表第几个块，第二位是纵坐标代表第几个像素
-            # block_indexes = torch.div(bad_index, block_pixes_num).int() + 1
             bad_indexes = torch.unique(bad_indexes, sorted=False, dim=0)
-            for bad_index in bad_indexes:
-                block_y = ys[bad_index, :]
-                block_x = xs[bad_index, :]
-                if block_y.min() < 0:
-                    dy = 0 - block_y.min()
-                elif block_y.max() >= fh:
-                    dy = fh - block_y.max() - 1
-                else:
-                    dy = 0
-
-                if block_x.min() < 0:
-                    dx = 0 - block_x.min()
-                elif block_x.max() >= fw:
-                    dx = fw - block_x.max() - 1
-                else:
-                    dx = 0
-
-                block_y = block_y + torch.ones_like(block_y) * dy
-                block_x = block_x + torch.ones_like(block_x) * dx
-
-                assert (block_y.min() >= 0) & (block_y.max() < fh) \
-                       & (block_y.min() >= 0) & (block_x.max() < fw)
-                ys[bad_index, :] = block_y
-                xs[bad_index, :] = block_x
+            mask = torch.ones_like(ys, dtype=torch.bool)
+            mask[bad_indexes] = False
+            ys = ys[mask].reshape(-1, block_pixes_num)
+            xs = xs[mask].reshape(-1, block_pixes_num)
+            block_num = len(ys)
 
         inds = (ys * fw + xs).long()
         yx = torch.stack((ys, xs), dim=2)
