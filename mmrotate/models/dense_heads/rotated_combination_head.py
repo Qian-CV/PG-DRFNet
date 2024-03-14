@@ -22,7 +22,7 @@ from mmrotate.registry import MODELS, TASK_UTILS
 from mmrotate.structures import RotatedBoxes, distance2obb
 from mmrotate.models.dense_heads import RotatedRTMDetHead
 
-from utils import utils, qinfer_v2, qinfer_v1
+from utils import utils, dpinfer_v2, dpinfer_v1
 from utils.utils import get_box_scales, get_anchor_center_min_dis, permute_to_N_HWA_K
 from utils.fvcore.nn.focal_loss import sigmoid_focal_loss
 
@@ -618,7 +618,6 @@ class CombinationSepBNHead(CombinationHead):
             scale_angle=False,
             **kwargs)
 
-        # 新加入的初始化
         self.guidance_layer_train = guidance_layer_train
         self.guidance_featmap_sizes = None
         self.guidance_anchor_generator = utils.QueryAnchorGenerator([4, 8, 16, 32], [0.5, 1.0, 2.0], scales=[8])
@@ -636,11 +635,12 @@ class CombinationSepBNHead(CombinationHead):
         self.context = context
         self.loss_guidance_weight = loss_guidance_weight
 
-        self.guidance_head = PGHead(guidance_head_size[0], guidance_head_size[1], guidance_head_size[2], guidance_head_size[3])
+        self.guidance_head = PGHead(guidance_head_size[0], guidance_head_size[1], guidance_head_size[2],
+                                    guidance_head_size[3])
         if dp_version == 'v1':
-            self.qInfer = qinfer_v1.QueryInfer(1, num_classes, dp_threshold, context=context)
+            self.dpInfer = dpinfer_v1.DynamicInfer(1, num_classes, dp_threshold, context=context)
         elif dp_version == 'v2':
-            self.qInfer = qinfer_v2.QueryInfer(1, num_classes, dp_threshold, context=context)
+            self.dpInfer = dpinfer_v2.DynamicInfer(1, num_classes, dp_threshold, context=context)
 
     def _init_layers(self) -> None:
         """Initialize layers of the head."""
@@ -736,7 +736,7 @@ class CombinationSepBNHead(CombinationHead):
             per_layer_small_gt = []
             for target_per_image in targets:
                 target_box_scales = get_box_scales(
-                    target_per_image.bboxes)  # fixme: 这里需要对加入旋转角的框计算面积，括号里面写instance的bbox tensor,新框架更新了面积方法
+                    target_per_image.bboxes)
                 small_inds = (target_box_scales < self.fp_obj_scale[lind][1]) & (
                         target_box_scales >= self.fp_obj_scale[lind][0])
                 small_boxes = target_per_image.bboxes[small_inds]
@@ -811,7 +811,7 @@ class CombinationSepBNHead(CombinationHead):
                 cls_scores.append(cls_score)
                 bbox_preds.append(reg_dist)
                 angle_preds.append(angle_pred)
-            with torch.no_grad():  # fixme: 增加了防止爆显存
+            with torch.no_grad():
                 guidance_feature = [feats[x] for x in self.guidance_layer_train]
                 self.guidance_featmap_sizes = [featmap.size()[-2:] for featmap in guidance_feature]
             guidance_logits = self.guidance_head(guidance_feature)
@@ -823,13 +823,13 @@ class CombinationSepBNHead(CombinationHead):
         cls_scores = []
         bbox_preds = []
         angle_preds = []
-        # 搭建whole,guidance's feature and strides
+
         features_whole = [feats[x] for x in self.layers_no_dp]
         features_key = [feats[x] for x in self.layers_key_test]
         features_guidance = [feats[x] for x in self.layers_value_test]
         strides_whole = [self.prior_generator.strides[x] for x in self.layers_no_dp]
         strides_guidance = [self.prior_generator.strides[x] for x in self.layers_value_test]
-        # 下面循环中用到的卷积参数对应层编号
+
         layer_num = len(feats) - len(self.layers_no_dp)
 
         for idx, (x, stride) in enumerate(
@@ -859,12 +859,11 @@ class CombinationSepBNHead(CombinationHead):
             bbox_preds.append(reg_dist)
             angle_preds.append(angle_pred)
 
-        # 开始计算guidance层的回归和分类
         guidance_logits = self.guidance_head(features_key)
-        # 获得特征分块结果
-        block_feature_list, anchor_inds = self.qInfer.run_qinfer(features_guidance, guidance_logits)
+
+        block_feature_list, anchor_inds = self.dpInfer.run_dpinfer(features_guidance, guidance_logits)
         self.anchor_inds = anchor_inds
-        # 获得feature_mapsize
+        # obtain feature_map size
         num_levels = len(feats)
         self.featmap_sizes = [feats[i].shape[-2:] for i in range(num_levels)]
 
@@ -893,7 +892,6 @@ class CombinationSepBNHead(CombinationHead):
 
                 angle_pred = self.rtm_ang[1](reg_feat)
 
-                # 将每个特征块的检测结果合并到一个list中
                 cls_result_list.append(cls_score)
                 det_result_list.append(reg_dist)
                 angle_result_list.append(angle_pred)
@@ -906,12 +904,12 @@ class CombinationSepBNHead(CombinationHead):
                 cls_result_all = torch.cat(cls_result_list, 0)
                 bbox_result_all = torch.cat(det_result_list, 0)
                 angle_result_all = torch.cat(angle_result_list, 0)
-                # 不同的dp_version有着不同的处理方式
+
                 if self.dp_version == 'v1' or self.dp_version == 'v1.1':
                     cls_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
                     bbox_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
                     angle_result_all.view(-1, self.context * 2 + 1, self.context * 2 + 1)
-                # 将结果插入到多层结果的第一的位置
+
             cls_scores.insert(0, cls_result_all)
             bbox_preds.insert(0, bbox_result_all)
             angle_preds.insert(0, angle_result_all)
@@ -952,14 +950,15 @@ class CombinationSepBNHead(CombinationHead):
         """
         loss_dict = super().loss_by_feat(cls_scores, bbox_preds, angle_preds,
                                          batch_gt_instances, batch_img_metas, batch_gt_instances_ignore)
-        # 开始计算guidance损失
+
         with torch.no_grad():
             guidance_centers = self.guidance_anchor_generator.get_center_and_anchor(
-                self.guidance_featmap_sizes)  # fixme:是否使用旋转的fake anchor
+                self.guidance_featmap_sizes)  # fixme:use fake anchor?
             gt_guidance = self.get_guidance_gt(guidance_centers, batch_gt_instances)
-        _guidance_loss = self.guidance_loss(gt_guidance, guidance_logits, self.guidance_loss_gammas, self.guidance_loss_weights)
+        _guidance_loss = self.guidance_loss(gt_guidance, guidance_logits, self.guidance_loss_gammas,
+                                            self.guidance_loss_weights)
         loss_dict['loss_guidance'] = _guidance_loss
-        # 动态感受野，平衡不同层的权重
+
         if type(self.cls_layer_weight) and type(self.reg_layer_weight) is list:
             loss_dict['loss_cls'] = [x * y for x, y in zip(loss_dict['loss_cls'], self.cls_layer_weight)]
             loss_dict['loss_bbox'] = [x * y for x, y in zip(loss_dict['loss_bbox'], self.reg_layer_weight)]
@@ -1053,7 +1052,6 @@ class CombinationSepBNHead(CombinationHead):
                 else:
                     score_factor_list = [None for _ in range(num_levels - 1)]
 
-                # 构建whole和value的预选框
                 anchors_whole = [mlvl_priors[x] for x in self.layers_no_dp]
                 anchors_value = [mlvl_priors[x] for x in self.layers_value_test]
                 anchors_all = mlvl_priors[1:]
@@ -1077,26 +1075,6 @@ class CombinationSepBNHead(CombinationHead):
                 result_list.append(results)
             return result_list
 
-    # def dynamic_receptive_field(self, batch_gt_instances) -> List:
-    #     score = torch.zeros(4)
-    #     base_recognition_size = 8
-    #     distinguish_thr = [base_recognition_size * x for x in [4, 8, 16, 32]]
-    #     field_1, field_2, field_3, field_4 = distinguish_thr
-    #     for instance in batch_gt_instances:
-    #         length_size = torch.sqrt(instance.bboxes.areas)
-    #         for item in length_size:
-    #             if item.item() <= field_1:
-    #                 score[0] += 1
-    #             elif field_1 < item.item() <= field_2:
-    #                 score[1] += 1
-    #             elif field_2 < item.item() <= field_3:
-    #                 score[2] += 1
-    #             else:
-    #                 score[3] += 1
-    #
-    #     receptive_field_weight = score
-    #     return receptive_field_weight
-
 
 class PGHead(nn.Module):
     def __init__(self, in_channels, conv_channels, num_convs, pred_channels, pred_prior=None):
@@ -1116,10 +1094,7 @@ class PGHead(nn.Module):
         self.pred_net = nn.Conv2d(channels, pred_channels, kernel_size=3, stride=1, padding=1)
 
         nn.init.xavier_normal_(self.pred_net.weight)
-        if pred_prior is not None:
-            bias_value = -(math.log((1 - prior_prob) / prior_prob))
-            nn.init.constant_(self.pred_net.bias, bias_value)
-        else:
+        if pred_prior is None:
             nn.init.constant_(self.pred_net.bias, 0)
 
     def forward(self, features):

@@ -13,7 +13,7 @@ def permute_to_N_HWA_K(tensor, K):
     return tensor
 
 
-class QueryInfer(object):
+class DynamicInfer(object):
     def __init__(self, anchor_num, num_classes, score_th=0.12, context=2):
 
         self.anchor_num = anchor_num
@@ -29,7 +29,7 @@ class QueryInfer(object):
             pidxs = torch.where(prob > self.score_th)[0]  # .float()
             y = torch.div(pidxs, qw).int()
             x = torch.remainder(pidxs, qw).int()
-        else:  # todo: 下一层推理用级联的方法还是推理的方法？
+        else:
             prob = torch.sigmoid_(query_logits).view(-1)[inds]
             pidxs = prob > self.score_th
             y = last_ys.flatten(0)[pidxs]
@@ -37,7 +37,7 @@ class QueryInfer(object):
 
         if y.size(0) == 0:
             return None, None, None, None, None, None
-        # 在上一层中寻找同一区域的像素集合
+
         lt = torch.tensor([y.min(), x.min()])
         rb = torch.tensor([y.max(), x.max()])
         # block_num, last_block_list = self.find_adjacent_pixels(coordinates)
@@ -46,7 +46,8 @@ class QueryInfer(object):
         ys = []
         xs = []
         block_list = []
-        # todo: 根据预测位置，聚合概率点为区域，先分割特征图
+        # todo: According to the predicted position, the probability
+        #  points are aggregated into regions, and the feature map is first segmented.
         # last_block_list = [torch.stack(block, 0) for block in last_block_list]
         high_wide = []
         block_y = []
@@ -76,7 +77,7 @@ class QueryInfer(object):
             block_feature_list.append(feature_value[:, :, y_index, x_index].view(1, 192, h, w))
         return block_feature_list
 
-    def run_qinfer(self, features_value, query_logits):
+    def run_dpinfer(self, features_value, query_logits):
 
         last_ys, last_xs = None, None
         # query_logits = self._run_convs(features_key[-1], self.qcls_conv)\
@@ -86,7 +87,7 @@ class QueryInfer(object):
 
         for i in range(len(features_value) - 1, -1, -1):
             block_list, high_wide, last_ys, last_xs, inds, block_num = self._split_feature(
-                query_logits[i+1],
+                query_logits[i + 1],
                 last_ys,
                 last_xs,
                 None,

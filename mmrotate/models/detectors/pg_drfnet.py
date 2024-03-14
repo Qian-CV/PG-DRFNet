@@ -88,4 +88,4 @@ class PG_DRFNet(RTMDet):
         batch_data_samples = self.add_pred_to_datasample(
             batch_data_samples, results_list)
         return batch_data_samples
-        # return x  # fixme:这是为了生成热力图,正常应该用上面
+        # return x  # fixme:This is for generating heatmap, Use the one above normally
