@@ -1,10 +1,10 @@
-# PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images
+# Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images
 
-This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at: [here]()
+This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images" at: [here]()
 
 ## Introduction
 
-This repository is the official implementation of "PG-DRFNet: Position Guided Dynamic Receptive Field Network for Finite-Pixel Object Detection in Remote Sensing Images" at [here]()
+This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images" at [here]()
 
 The master branch is built on MMRotate which works with **PyTorch 1.8+**.
 
@@ -91,4 +91,4 @@ The code is developed based on the following repositories. We appreciate their n
 
 ## Cite this repository
 
-If you use this software in your work, please cite it using the following metadata. Liuqian Wang, Jing Zhang, et. al. (2023). PG-DRFNet by BJUT-AI&VBD [Computer software]. https://github.com/Qian-CV/PG-DRFNet
+If you use this software in your work, please cite it using the following metadata. Liuqian Wang, Jing Zhang, et. al. (2024). PG-DRFNet by BJUT-AI&VBD [Computer software]. https://github.com/Qian-CV/PG-DRFNet
