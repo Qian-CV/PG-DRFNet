@@ -1,6 +1,8 @@
-_base_ = ['../../../rotated_rtmdet/_base_/default_runtime.py', '../../../rotated_rtmdet/_base_/schedule_6x.py',
-          '../../../_base_/datasets/dotav2_rr.py']
+_base_ = ['../../../rotated_rtmdet/_base_/default_runtime.py', '../../../rotated_rtmdet/_base_/schedule_12x.py',
+          '../../../_base_/datasets/vedai.py']
 
+base_lr = 0.004 / 16
+interval = 4
 angle_version = 'le90'
 checkpoint = '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth' # noqa
 # fp16 = dict(loss_scale='dynamic')
@@ -35,27 +37,25 @@ model = dict(
         act_cfg=dict(type='SiLU')),
     bbox_head=dict(
         type='CombinationSepBNHead',
-        num_classes=18,
+        num_classes=6,
         in_channels=192,
         stacked_convs=2,
         feat_channels=192,
         angle_version=angle_version,
-        guidance_head_size=[192, 192, 4, 1],
-        guidance_layer_train=[1, 2],
-        fp_object_scale=[[0, 32], [0, 64]],
-        fp_center_dis_coeff=[1., 1.],
-        guidance_loss_gammas=[1.2, 1.2],
-        guidance_loss_weights=[10., 10.],
-        dynamic_perception_infer=False,
-        dp_version='v1',
-        dp_threshold=0.12,
+        query_head_size=[192, 192, 4, 1],
+        query_layer_train=[1, 2],
+        small_object_scale=[[0, 32], [0, 64]],
+        small_center_dis_coeff=[1., 1.],
+        query_loss_gammas=[1.2, 1.2],
+        query_loss_weights=[10., 10.],
+        query_infer=False,
+        infer_version='v3',
+        query_threshold=0.12,
         context=4,
-        layers_no_dp=[1, 2, 3],
+        layers_whole_test=[1, 2, 3],
         layers_key_test=[1, 2],
         layers_value_test=[0, 1],
-        loss_guidance_weight=1,
-        # cls_layer_weight=[1.0, 1.0, 1.0, 1.0],
-        # reg_layer_weight=[1.0, 1.0, 1.0, 1.0],
+        loss_query_weight=1,
         cls_layer_weight=[2.5, 2.1, 1.4, 1],
         reg_layer_weight=[2.5, 2.1, 1.4, 1],
         # cls_layer_weight='dynamic',
@@ -83,9 +83,8 @@ model = dict(
         act_cfg=dict(type='SiLU')),
     train_cfg=dict(
         assigner=dict(
-            type='mmdet.DynamicSoftLabelAssignerSaveMemory',
+            type='mmdet.DynamicSoftLabelAssigner',
             iou_calculator=dict(type='RBboxOverlaps2D'),
-            gpu_assign_thr=1000,
             topk=13),
         allowed_border=-1,
         pos_weight=-1,
@@ -104,18 +103,15 @@ train_dataloader = dict(batch_size=4, num_workers=4)
 val_dataloader = dict(batch_size=1, num_workers=8)
 test_dataloader = dict(batch_size=8, num_workers=8)
 
-base_lr = 0.004 / 32
-interval = 4
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
     # type='AmpOptimWrapper',
-    optimizer=dict(type='AdamW', lr=base_lr, weight_decay=0.05),
-    accumulative_counts=2,
+    optimizer=dict(type='AdamW', lr=base_lr/2, weight_decay=0.05),
+    # accumulative_counts=2,
     paramwise_cfg=dict(
         norm_decay_mult=0, bias_decay_mult=0, bypass_duplicate=True))
 default_hooks = dict(
     checkpoint=dict(type='CheckpointHook', interval=interval, max_keep_ckpts=6))
-train_cfg = dict(
-    type='EpochBasedTrainLoop', val_interval=4)
-work_dir = './work_dirs/DOTA2_0/rtmdet/pg_drfnet-6x-dota2/'
+work_dir = './work_dirs/vedai/rtmdet/rotated_rtmdet_m_ch192-12x-vedai-4layers-guidancehead-bs4/'
+# work_dir = './work_dirs/vedai/shishi/'

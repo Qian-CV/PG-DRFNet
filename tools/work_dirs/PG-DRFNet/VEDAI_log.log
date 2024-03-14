@@ -1,0 +1,609 @@
+2024/01/30 21:18:29 - mmengine - INFO -
+------------------------------------------------------------
+System environment:
+    sys.platform: linux
+    Python: 3.8.17 (default, Jul  5 2023, 21:04:15) [GCC 11.2.0]
+    CUDA available: True
+    numpy_random_seed: 628318458
+    GPU 0: NVIDIA GeForce RTX 3090
+    CUDA_HOME: /usr/local/cuda
+    NVCC: Cuda compilation tools, release 11.7, V11.7.64
+    GCC: gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+    PyTorch: 1.8.0+cu111
+    PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.0 Product Build 20191122 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON,
+
+    TorchVision: 0.9.0+cu111
+    OpenCV: 4.8.0
+    MMEngine: 0.8.1
+
+Runtime environment:
+    cudnn_benchmark: False
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
+    dist_cfg: {'backend': 'nccl'}
+    seed: 628318458
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2024/1/30 21:18:29 - mmengine - INFO - Config:
+default_scope = 'mmrotate'
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=50),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(type='CheckpointHook', interval=4, max_keep_ckpts=6),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    visualization=dict(type='mmdet.DetVisualizationHook'))
+env_cfg = dict(
+    cudnn_benchmark=False,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
+    dist_cfg=dict(backend='nccl'))
+vis_backends = [
+    dict(type='LocalVisBackend'),
+]
+visualizer = dict(
+    type='RotLocalVisualizer',
+    vis_backends=[
+        dict(type='LocalVisBackend'),
+    ],
+    name='visualizer')
+log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
+log_level = 'INFO'
+load_from = '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/work_dirs/vedai/rtmdet/rotated_rtmdet_m_ch192-12x-vedai-4layers-guidancehead-bs4/84.06.pth'
+resume = False
+custom_hooks = [
+    dict(type='mmdet.NumClassCheckHook'),
+    dict(
+        type='EMAHook',
+        ema_type='mmdet.ExpMomentumEMA',
+        momentum=0.0002,
+        update_buffers=True,
+        priority=49),
+]
+max_epochs = 144
+base_lr = 0.00025
+interval = 4
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=144, val_interval=4)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+param_scheduler = [
+    dict(
+        type='LinearLR', start_factor=1e-05, by_epoch=False, begin=0,
+        end=1000),
+    dict(
+        type='CosineAnnealingLR',
+        eta_min=1.6666666666666667e-05,
+        begin=72,
+        end=144,
+        T_max=72,
+        by_epoch=True,
+        convert_to_iter_based=True),
+]
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='AdamW', lr=0.000125, weight_decay=0.05),
+    paramwise_cfg=dict(
+        norm_decay_mult=0, bias_decay_mult=0, bypass_duplicate=True))
+dataset_type = 'VEDAInoOtherDataset'
+data_root = '/media/ubuntu/nvidia/dataset/VEDAI_1024/'
+backend_args = None
+train_pipeline = [
+    dict(type='mmdet.LoadImageFromFile', backend_args=None),
+    dict(type='mmdet.LoadAnnotations', with_bbox=True, box_type='qbox'),
+    dict(type='ConvertBoxType', box_type_mapping=dict(gt_bboxes='rbox')),
+    dict(type='mmdet.Resize', scale=(
+        1024,
+        1024,
+    ), keep_ratio=True),
+    dict(
+        type='mmdet.RandomFlip',
+        prob=0.75,
+        direction=[
+            'horizontal',
+            'vertical',
+            'diagonal',
+        ]),
+    dict(
+        type='RandomRotate',
+        prob=0.5,
+        angle_range=180,
+        rect_obj_labels=[
+            9,
+            11,
+        ]),
+    dict(
+        type='mmdet.Pad',
+        size=(
+            1024,
+            1024,
+        ),
+        pad_val=dict(img=(
+            114,
+            114,
+            114,
+        ))),
+    dict(type='mmdet.PackDetInputs'),
+]
+val_pipeline = [
+    dict(type='mmdet.LoadImageFromFile', backend_args=None),
+    dict(type='mmdet.Resize', scale=(
+        1024,
+        1024,
+    ), keep_ratio=True),
+    dict(type='mmdet.LoadAnnotations', with_bbox=True, box_type='qbox'),
+    dict(type='ConvertBoxType', box_type_mapping=dict(gt_bboxes='rbox')),
+    dict(
+        type='mmdet.Pad',
+        size=(
+            1024,
+            1024,
+        ),
+        pad_val=dict(img=(
+            114,
+            114,
+            114,
+        ))),
+    dict(
+        type='mmdet.PackDetInputs',
+        meta_keys=(
+            'img_id',
+            'img_path',
+            'ori_shape',
+            'img_shape',
+            'scale_factor',
+        )),
+]
+test_pipeline = [
+    dict(type='mmdet.LoadImageFromFile', backend_args=None),
+    dict(type='mmdet.Resize', scale=(
+        1024,
+        1024,
+    ), keep_ratio=True),
+    dict(
+        type='mmdet.Pad',
+        size=(
+            1024,
+            1024,
+        ),
+        pad_val=dict(img=(
+            114,
+            114,
+            114,
+        ))),
+    dict(
+        type='mmdet.PackDetInputs',
+        meta_keys=(
+            'img_id',
+            'img_path',
+            'ori_shape',
+            'img_shape',
+            'scale_factor',
+        )),
+]
+train_dataloader = dict(
+    batch_size=4,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    batch_sampler=None,
+    pin_memory=False,
+    dataset=dict(
+        type='VEDAInoOtherDataset',
+        data_root='/media/ubuntu/nvidia/dataset/VEDAI_1024/',
+        ann_file='trainval/labelTxt_noOther/',
+        data_prefix=dict(img_path='trainval/images/'),
+        filter_cfg=dict(filter_empty_gt=True),
+        pipeline=[
+            dict(type='mmdet.LoadImageFromFile', backend_args=None),
+            dict(
+                type='mmdet.LoadAnnotations', with_bbox=True, box_type='qbox'),
+            dict(
+                type='ConvertBoxType',
+                box_type_mapping=dict(gt_bboxes='rbox')),
+            dict(type='mmdet.Resize', scale=(
+                1024,
+                1024,
+            ), keep_ratio=True),
+            dict(
+                type='mmdet.RandomFlip',
+                prob=0.75,
+                direction=[
+                    'horizontal',
+                    'vertical',
+                    'diagonal',
+                ]),
+            dict(
+                type='RandomRotate',
+                prob=0.5,
+                angle_range=180,
+                rect_obj_labels=[
+                    9,
+                    11,
+                ]),
+            dict(
+                type='mmdet.Pad',
+                size=(
+                    1024,
+                    1024,
+                ),
+                pad_val=dict(img=(
+                    114,
+                    114,
+                    114,
+                ))),
+            dict(type='mmdet.PackDetInputs'),
+        ]))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=8,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='VEDAInoOtherDataset',
+        data_root='/media/ubuntu/nvidia/dataset/VEDAI_1024/',
+        ann_file='test/labelTxt_noOther/',
+        data_prefix=dict(img_path='test/images/'),
+        test_mode=True,
+        pipeline=[
+            dict(type='mmdet.LoadImageFromFile', backend_args=None),
+            dict(type='mmdet.Resize', scale=(
+                1024,
+                1024,
+            ), keep_ratio=True),
+            dict(
+                type='mmdet.LoadAnnotations', with_bbox=True, box_type='qbox'),
+            dict(
+                type='ConvertBoxType',
+                box_type_mapping=dict(gt_bboxes='rbox')),
+            dict(
+                type='mmdet.Pad',
+                size=(
+                    1024,
+                    1024,
+                ),
+                pad_val=dict(img=(
+                    114,
+                    114,
+                    114,
+                ))),
+            dict(
+                type='mmdet.PackDetInputs',
+                meta_keys=(
+                    'img_id',
+                    'img_path',
+                    'ori_shape',
+                    'img_shape',
+                    'scale_factor',
+                )),
+        ]))
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=8,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='VEDAInoOtherDataset',
+        data_root='/media/ubuntu/nvidia/dataset/VEDAI_1024/',
+        ann_file='test/labelTxt_noOther/',
+        data_prefix=dict(img_path='test/images/'),
+        test_mode=True,
+        pipeline=[
+            dict(type='mmdet.LoadImageFromFile', backend_args=None),
+            dict(type='mmdet.Resize', scale=(
+                1024,
+                1024,
+            ), keep_ratio=True),
+            dict(
+                type='mmdet.LoadAnnotations', with_bbox=True, box_type='qbox'),
+            dict(
+                type='ConvertBoxType',
+                box_type_mapping=dict(gt_bboxes='rbox')),
+            dict(
+                type='mmdet.Pad',
+                size=(
+                    1024,
+                    1024,
+                ),
+                pad_val=dict(img=(
+                    114,
+                    114,
+                    114,
+                ))),
+            dict(
+                type='mmdet.PackDetInputs',
+                meta_keys=(
+                    'img_id',
+                    'img_path',
+                    'ori_shape',
+                    'img_shape',
+                    'scale_factor',
+                )),
+        ]))
+val_evaluator = dict(type='DOTAMetric', metric='mAP')
+test_evaluator = dict(type='DOTAMetric', metric='mAP', iou_thrs=0.5)
+angle_version = 'le90'
+checkpoint = '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth'
+model = dict(
+    type='RTMDetGuidance',
+    data_preprocessor=dict(
+        type='mmdet.DetDataPreprocessor',
+        mean=[
+            103.53,
+            116.28,
+            123.675,
+        ],
+        std=[
+            57.375,
+            57.12,
+            58.395,
+        ],
+        bgr_to_rgb=False,
+        boxtype2tensor=False,
+        batch_augments=None),
+    backbone=dict(
+        type='mmdet.CSPNeXt',
+        arch='P5',
+        out_indices=(
+            1,
+            2,
+            3,
+            4,
+        ),
+        expand_ratio=0.5,
+        deepen_factor=0.67,
+        widen_factor=0.75,
+        channel_attention=True,
+        norm_cfg=dict(type='SyncBN'),
+        act_cfg=dict(type='SiLU'),
+        init_cfg=dict(
+            type='Pretrained',
+            prefix='backbone.',
+            checkpoint=
+            '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth'
+        )),
+    neck=dict(
+        type='mmdet.CSPNeXtPAFPN',
+        in_channels=[
+            96,
+            192,
+            384,
+            768,
+        ],
+        out_channels=192,
+        num_csp_blocks=2,
+        expand_ratio=0.5,
+        norm_cfg=dict(type='SyncBN'),
+        act_cfg=dict(type='SiLU')),
+    bbox_head=dict(
+        type='RotatedRTMDetGuidanceSepBNHead',
+        num_classes=6,
+        in_channels=192,
+        stacked_convs=2,
+        feat_channels=192,
+        angle_version='le90',
+        query_head_size=[
+            192,
+            192,
+            4,
+            1,
+        ],
+        query_layer_train=[
+            1,
+            2,
+        ],
+        small_object_scale=[
+            [
+                0,
+                32,
+            ],
+            [
+                0,
+                64,
+            ],
+        ],
+        small_center_dis_coeff=[
+            1.0,
+            1.0,
+        ],
+        query_loss_gammas=[
+            1.2,
+            1.2,
+        ],
+        query_loss_weights=[
+            10.0,
+            10.0,
+        ],
+        query_infer=False,
+        infer_version='v3',
+        query_threshold=1,
+        context=4,
+        layers_whole_test=[
+            1,
+            2,
+            3,
+        ],
+        layers_key_test=[
+            1,
+            2,
+        ],
+        layers_value_test=[
+            0,
+        ],
+        loss_query_weight=1,
+        cls_layer_weight=[
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+        ],
+        reg_layer_weight=[
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+        ],
+        anchor_generator=dict(
+            type='mmdet.MlvlPointGenerator',
+            offset=0,
+            strides=[
+                4,
+                8,
+                16,
+                32,
+            ]),
+        bbox_coder=dict(type='DistanceAnglePointCoder', angle_version='le90'),
+        loss_cls=dict(
+            type='mmdet.QualityFocalLoss',
+            use_sigmoid=True,
+            beta=2.0,
+            loss_weight=1.0),
+        loss_bbox=dict(type='RotatedIoULoss', mode='linear', loss_weight=2.0),
+        with_objectness=False,
+        exp_on_reg=True,
+        share_conv=True,
+        pred_kernel_size=1,
+        use_hbbox_loss=False,
+        scale_angle=False,
+        loss_angle=None,
+        norm_cfg=dict(type='SyncBN'),
+        act_cfg=dict(type='SiLU')),
+    train_cfg=dict(
+        assigner=dict(
+            type='mmdet.DynamicSoftLabelAssigner',
+            iou_calculator=dict(type='RBboxOverlaps2D'),
+            topk=13),
+        allowed_border=-1,
+        pos_weight=-1,
+        debug=False),
+    test_cfg=dict(
+        nms_pre=2000,
+        min_bbox_size=0,
+        score_thr=0.05,
+        nms=dict(type='nms_rotated', iou_threshold=0.1),
+        max_per_img=2000))
+work_dir = './work_dirs/vedai/rtmdet/rotated_rtmdet_m_ch192-12x-vedai-4layers-guidancehead-bs4/'
+launcher = 'none'
+
+2024/1/30 21:18:33 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+2024/1/30 21:18:33 - mmengine - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) RuntimeInfoHook
+(49          ) EMAHook
+(BELOW_NORMAL) LoggerHook
+ --------------------
+after_load_checkpoint:
+(49          ) EMAHook
+ --------------------
+before_train:
+(VERY_HIGH   ) RuntimeInfoHook
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+(VERY_LOW    ) CheckpointHook
+ --------------------
+before_train_epoch:
+(VERY_HIGH   ) RuntimeInfoHook
+(NORMAL      ) IterTimerHook
+(NORMAL      ) DistSamplerSeedHook
+(NORMAL      ) NumClassCheckHook
+ --------------------
+before_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook
+(NORMAL      ) IterTimerHook
+ --------------------
+after_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+(BELOW_NORMAL) LoggerHook
+(LOW         ) ParamSchedulerHook
+(VERY_LOW    ) CheckpointHook
+ --------------------
+after_train_epoch:
+(NORMAL      ) IterTimerHook
+(LOW         ) ParamSchedulerHook
+(VERY_LOW    ) CheckpointHook
+ --------------------
+before_val_epoch:
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+(NORMAL      ) NumClassCheckHook
+ --------------------
+before_val_iter:
+(NORMAL      ) IterTimerHook
+ --------------------
+after_val_iter:
+(NORMAL      ) IterTimerHook
+(NORMAL      ) DetVisualizationHook
+(BELOW_NORMAL) LoggerHook
+ --------------------
+after_val_epoch:
+(VERY_HIGH   ) RuntimeInfoHook
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+(BELOW_NORMAL) LoggerHook
+(LOW         ) ParamSchedulerHook
+(VERY_LOW    ) CheckpointHook
+ --------------------
+before_save_checkpoint:
+(49          ) EMAHook
+ --------------------
+after_train:
+(VERY_LOW    ) CheckpointHook
+ --------------------
+before_test_epoch:
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+ --------------------
+before_test_iter:
+(NORMAL      ) IterTimerHook
+ --------------------
+after_test_iter:
+(NORMAL      ) IterTimerHook
+(NORMAL      ) DetVisualizationHook
+(BELOW_NORMAL) LoggerHook
+ --------------------
+after_test_epoch:
+(VERY_HIGH   ) RuntimeInfoHook
+(49          ) EMAHook
+(NORMAL      ) IterTimerHook
+(BELOW_NORMAL) LoggerHook
+ --------------------
+after_run:
+(BELOW_NORMAL) LoggerHook
+ --------------------
+2024/1/30 21:18:35 - mmengine - INFO - Load checkpoint from /media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/work_dirs/vedai/rtmdet/rotated_rtmdet_m_ch192-12x-vedai-4layers-guidancehead-bs4/84.06.pth
+2024/1/30 21:18:38 - mmengine - INFO - Epoch(test) [ 50/242]    eta: 0:00:13  time: 0.0698  data_time: 0.0065  memory: 476
+2024/1/30 21:18:41 - mmengine - INFO - Epoch(test) [100/242]    eta: 0:00:09  time: 0.0604  data_time: 0.0012  memory: 476
+2024/1/30 21:18:44 - mmengine - INFO - Epoch(test) [150/242]    eta: 0:00:05  time: 0.0618  data_time: 0.0012  memory: 476
+2024/1/30 21:18:47 - mmengine - INFO - Epoch(test) [200/242]    eta: 0:00:02  time: 0.0597  data_time: 0.0012  memory: 476
+2024/1/30 21:18:50 - mmengine - INFO -
+---------------iou_thr: 0.5---------------
+2024/1/30 21:18:51 - mmengine - INFO -
++-------------+-----+------+--------+--------+
+| class       | gts | dets | recall | ap     |
++-------------+-----+------+--------+--------+
+| car         | 308 | 774  | 0.9773 | 0.8881 |
+| truck       | 66  | 281  | 0.9394 | 0.8153 |
+| pickup      | 196 | 715  | 0.9898 | 0.8774 |
+| tractor     | 27  | 141  | 0.9630 | 0.8050 |
+| camping-car | 80  | 300  | 1.0000 | 0.8516 |
+| van         | 21  | 275  | 1.0000 | 0.8059 |
++-------------+-----+------+--------+--------+
+| mAP         |     |      |        | 0.8406 |
++-------------+-----+------+--------+--------+
+2024/1/30 21:18:51 - mmengine - INFO - Epoch(test) [242/242]    dota/mAP: 0.8406  dota/AP50: 0.8410  data_time: 0.0023  time: 0.0623

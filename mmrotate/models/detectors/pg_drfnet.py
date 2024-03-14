@@ -12,7 +12,7 @@ from mmdet.structures import OptSampleList, SampleList
 
 
 @MODELS.register_module()
-class RTMDetGuidance(RTMDet):
+class PG_DRFNet(RTMDet):
     """Implementation of RTMDet.
 
     Args:
