@@ -23,14 +23,14 @@ How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](d
 
 ### Results and models
 
-####1. DOTA-V2.0
+#### 1. DOTA-V2.0
 
 |                    Model                     |  mAP  | Angle | lr schd | Batch Size |                           Configs                            |                           Download                           |
 | :------------------------------------------: | :---: | :---: | :-----: | :--------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | [RTMDet-M](https://arxiv.org/abs/2212.07784) | 57.71 | le90  |   6x    |     8      |                              -                               |                              -                               |
 |                  PG-DRFNet                   | 59.01 | le90  |   6x    |     8      | [pg_drfnet-6x-dota2](./configs/PG-DRFNet/DOTA2_0/pg_drfnet-6x-dota2.py) | [model](https://drive.google.com/file/d/17ARF2Dv__Fl94EOWFnH4w9ZeBtJ_dJkY/view?usp=drive_link) \| [log](./tools/work_dirs/PG-DRFNet/DOTA_log.log) |
 
-####2. VEDAI
+#### 2. VEDAI
 
 | Model | mAP | Angle | lr schd | Batch Size | Configs | Download |
 | :-----: | :---- :| :---- :| :----: |: ---- :| :---- :|: ---- :|
