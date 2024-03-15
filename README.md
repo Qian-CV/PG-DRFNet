@@ -1,7 +1,5 @@
 # Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images
 
-This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images" .
-
 ![](docs/Figure/Fig1.png)
 
 ## Introduction
