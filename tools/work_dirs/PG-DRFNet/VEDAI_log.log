@@ -339,7 +339,7 @@ test_evaluator = dict(type='DOTAMetric', metric='mAP', iou_thrs=0.5)
 angle_version = 'le90'
 checkpoint = '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth'
 model = dict(
-    type='RTMDetGuidance',
+    type='PG_DRFNet',
     data_preprocessor=dict(
         type='mmdet.DetDataPreprocessor',
         mean=[
@@ -377,7 +377,7 @@ model = dict(
             '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth'
         )),
     neck=dict(
-        type='mmdet.CSPNeXtPAFPN',
+        type='DRF_FPN',
         in_channels=[
             96,
             192,
@@ -390,23 +390,23 @@ model = dict(
         norm_cfg=dict(type='SyncBN'),
         act_cfg=dict(type='SiLU')),
     bbox_head=dict(
-        type='RotatedRTMDetGuidanceSepBNHead',
+        type='CombinationSepBNHead',
         num_classes=6,
         in_channels=192,
         stacked_convs=2,
         feat_channels=192,
         angle_version='le90',
-        query_head_size=[
+        guidance_head_size=[
             192,
             192,
             4,
             1,
         ],
-        query_layer_train=[
+        guidance_layer_train=[
             1,
             2,
         ],
-        small_object_scale=[
+        fp_object_scale=[
             [
                 0,
                 32,
@@ -416,23 +416,23 @@ model = dict(
                 64,
             ],
         ],
-        small_center_dis_coeff=[
+        fp_center_dis_coeff=[
             1.0,
             1.0,
         ],
-        query_loss_gammas=[
+        guidance_loss_gammas=[
             1.2,
             1.2,
         ],
-        query_loss_weights=[
+        guidance_loss_weights=[
             10.0,
             10.0,
         ],
-        query_infer=False,
-        infer_version='v3',
-        query_threshold=1,
+        dynamic_perception_infer=False,
+        dp_version='v2',
+        query_threshold=0.12,
         context=4,
-        layers_whole_test=[
+        layers_no_dp=[
             1,
             2,
             3,
@@ -444,17 +444,17 @@ model = dict(
         layers_value_test=[
             0,
         ],
-        loss_query_weight=1,
+        loss_guidance_weight=1,
         cls_layer_weight=[
-            1.0,
-            1.0,
-            1.0,
+            2.5,
+            2.1,
+            1.4,
             1.0,
         ],
         reg_layer_weight=[
-            1.0,
-            1.0,
-            1.0,
+            2.5,
+            2.1,
+            1.4,
             1.0,
         ],
         anchor_generator=dict(
