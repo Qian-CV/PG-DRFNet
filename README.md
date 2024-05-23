@@ -50,7 +50,7 @@ and if you want submit the DOTA2.0 results for online evaluation, you can run  a
 ```bash
 python tools/test.py \
   --config configs/PG-DRFNet/pg_drfnet-6x-dota2.py \
-  --checkpoint path/to/gvt/model \
+  --checkpoint path/to/PG-DRFNet/model.pth \
   --cfg-options test_dataloader.dataset.ann_file=''  test_dataloader.dataset.data_prefix.img_path=test/images/ test_evaluator.format_only=True test_evaluator.merge_patches=True test_evaluator.outfile_prefix='path/to/save_dir'
 ```
 
