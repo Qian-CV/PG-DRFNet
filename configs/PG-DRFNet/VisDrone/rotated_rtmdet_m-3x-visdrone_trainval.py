@@ -2,9 +2,9 @@ _base_ = ['../../../rotated_rtmdet/_base_/default_runtime.py', '../../../rotated
           '../../../_base_/datasets/visdrone_coco_trainval.py']
 
 checkpoint = '/media/ubuntu/nvidia/wlq/part1_tiny_detection/mmrotate-1.x/tools/data/weight/cspnext-m_8xb256-rsb-a1-600e_in1k-ecb3bbd9.pth' # noqa
-base_lr = 0.004 / 32  # 最初是16
+base_lr = 0.004 / 32
 angle_version = 'le90'
-interval = 3  # 最初是12
+interval = 3
 
 model = dict(
     type='PG_DRFNet',
