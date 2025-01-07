@@ -12,6 +12,9 @@ PG-DRFNet's train/test configure files are placed under configs/PG-DRFNet/
 
 How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](docs/en/tutorials/dynamic_perception.md).
 
+## What's New
+* Added experimental configuration and weights for the VisDrone drone dataset on 1/7/2025, [here](configs\PG-DRFNet\VisDrone\rotated_rtmdet_m-3x-visdrone_trainval.py)
+
 ## Deep Learning Experiments
 
 ### Source of Pre-trained models
