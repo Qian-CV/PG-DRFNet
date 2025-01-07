@@ -16,7 +16,7 @@ How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](d
 
 * Supplemented feature visualization method, including image level and feature level on **2024-12-03**.
 
-* Added experimental configuration and weights for the VisDrone drone dataset on **2025-01-07**, [here](configs\PG-DRFNet\VisDrone\rotated_rtmdet_m-3x-visdrone_trainval.py).
+* Added experimental configuration and weights for the VisDrone drone dataset on **2025-01-07**, [here](configs/PG-DRFNet/VisDrone/rotated_rtmdet_m-3x-visdrone_trainval.py).
 
 ## Deep Learning Experiments
 
