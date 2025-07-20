@@ -4,13 +4,15 @@
 
 ## Introduction
 
-This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and SAR Images" at [Please stay tuned!]
+- ***2025.3.3***: **Congratulation🎉🎉！This paper is accepted by [TCSVT](https://doi.org/10.1109/TCSVT.2025.3547436)!！👀**	
 
-The master branch is built on MMRotate which works with **PyTorch 1.8+**.
+​		This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and 		SAR Images" at TCSVT.
 
-PG-DRFNet's train/test configure files are placed under configs/PG-DRFNet/
+1. The master branch is built on MMRotate which works with **PyTorch 1.8+**.
 
-How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](docs/en/tutorials/dynamic_perception.md).
+2. PG-DRFNet's train/test configure files are placed under configs/PG-DRFNet/
+
+3. How to utilize the dynamic perception of PG-DRFNet can be referenced to [here](docs/en/tutorials/dynamic_perception.md).🙌
 
 ## What's New
 
@@ -107,4 +109,4 @@ The code is developed based on the following repositories. We appreciate their n
 
 ## Cite this repository
 
-If you use this software in your work, please cite it using the following metadata. Liuqian Wang, Jing Zhang, et. al. (2024). PG-DRFNet by BJUT-AI&VBD [Computer software]. https://github.com/BJUT-AIVBD/PG-DRFNet
+If you use this software in your work, please cite it using the following metadata. Liuqian Wang, Jing Zhang, et. al. (2025). PG-DRFNet by BJUT-AI&VBD [Computer software]. https://github.com/BJUT-AIVBD/PG-DRFNet
