@@ -4,7 +4,7 @@
 
 ## Introduction
 
-- ***2025.3.3***: **Congratulation🎉🎉！This paper is accepted by [TCSVT](https://doi.org/10.1109/TCSVT.2025.3547436)!！👀**	
+- **2025.3.3**: **Congratulations🎉🎉！This paper is accepted by [TCSVT](https://doi.org/10.1109/TCSVT.2025.3547436)!！👀**	
 
 ​		This repository is the official implementation of "Position Guided Dynamic Receptive Field Network: A Small Object Detection Friendly to Optical and 		SAR Images" at TCSVT.
 
